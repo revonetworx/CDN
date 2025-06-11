@@ -45,6 +45,8 @@ describe('File Routes', () => {
         .get(`/files/${maliciousPath}`)
         .expect(403);
 
+      console.log(`Path: ${maliciousPath}, Response:`, response.body);
+
       expect(response.body).toEqual({
         error: 'Access denied',
         message: 'Invalid file path'
