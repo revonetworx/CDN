@@ -32,6 +32,15 @@ function createFileRouter(cdnDirectory) {
 
     // Sanitize filename by extracting base name
     const sanitizedFilename = path.basename(filename);
+    
+    // Add additional check to prevent accepting the raw input
+    if (sanitizedFilename !== filename) {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Invalid file path' 
+      });
+    }
+
     const fullPath = path.join(cdnDirectory, sanitizedFilename);
 
     // Double-check path resolution
