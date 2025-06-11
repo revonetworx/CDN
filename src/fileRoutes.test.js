@@ -32,15 +32,24 @@ describe('File Routes', () => {
     expect(response.text).toBe('Test content');
   });
 
-  it('should prevent directory traversal with ../', async () => {
-    const response = await request(app)
-      .get('/files/../etc/passwd')
-      .expect(403);
+  it('should prevent directory traversal attempts', async () => {
+    const dirTraversalCases = [
+      '../etc/passwd',
+      '/etc/passwd',
+      '..\\windows\\system32\\config\\SAM',
+      'test.txt/../secret.txt'
+    ];
 
-    expect(response.body).toEqual({
-      error: 'Access denied', 
-      message: 'Invalid file path'
-    });
+    for (const maliciousPath of dirTraversalCases) {
+      const response = await request(app)
+        .get(`/files/${maliciousPath}`)
+        .expect(403);
+
+      expect(response.body).toEqual({
+        error: 'Access denied',
+        message: 'Invalid file path'
+      });
+    }
   });
 
   it('should return 404 for non-existent file', async () => {
