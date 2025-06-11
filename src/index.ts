@@ -14,14 +14,22 @@ const CDN_DIR = path.resolve(__dirname, 'cdn');
 export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
-  // Strict early validation
-  if (!filename || 
-      filename.includes('/') || 
-      filename.includes('\\') || 
-      filename.includes('..') || 
-      filename.startsWith('.') || 
-      filename === ''
-  ) {
+  // Early validation to prevent various attack vectors
+  if (!filename) {
+    return res.status(400).json({ error: 'Filename is required' });
+  }
+
+  // Handle potentially malicious filename patterns
+  const maliciousPatterns = [
+    /\.\./,      // Prevents directory traversal
+    /^[/\\]/,    // Prevents absolute paths
+    /[/\\]/,     // Prevents path separators
+    /^\.$/,      // Prevents current directory
+    /^\.{1,2}$/, // Prevents current/parent directory
+    /^\\+/       // Prevents Windows path manipulation
+  ];
+
+  if (maliciousPatterns.some(pattern => pattern.test(filename))) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
