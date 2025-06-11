@@ -12,14 +12,16 @@ const CDN_DIR = path.resolve(__dirname, 'cdn');
  * @returns boolean indicating if filename is safe
  */
 function isValidFilename(filename: string): boolean {
-  const unsafePatterns = [
-    /\.\./,  // Prevents directory traversal
-    /^\.$/,  // Prevent current directory
-    /^[/\\]/, // Prevent absolute paths
-    /[/\\]/,  // Prevent path separators
-  ];
-
-  return !unsafePatterns.some(pattern => pattern.test(filename));
+  // Reject any filename with path separators or navigation
+  return !(
+    !filename || 
+    filename.includes('/') || 
+    filename.includes('\\') || 
+    filename.includes('..') || 
+    filename === '.' || 
+    filename.startsWith('/') || 
+    filename.startsWith('.')
+  );
 }
 
 /**
@@ -30,12 +32,7 @@ function isValidFilename(filename: string): boolean {
 export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
-  // Strict validation for filename
-  if (!filename) {
-    return res.status(400).json({ error: 'Filename is required' });
-  }
-
-  // Validate filename against unsafe patterns
+  // Validate filename
   if (!isValidFilename(filename)) {
     return res.status(403).json({ error: 'Access denied' });
   }
