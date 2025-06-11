@@ -31,6 +31,15 @@ export function retrieveFile(req: express.Request, res: express.Response) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
+  // Additional security checks
+  if (
+    sanitizedFilename.includes('..') || 
+    sanitizedFilename.startsWith('.') || 
+    sanitizedFilename === ''
+  ) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
   // Check if file exists
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: 'File not found' });
