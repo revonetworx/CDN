@@ -14,30 +14,33 @@ function createFileRouter(cdnDirectory) {
   const sanitizeFilePath = (req, res, next) => {
     const { filename } = req.params;
 
-    // Detect directory traversal attempts
-    if (filename.includes('../') || filename.startsWith('/') || filename.includes('..\\')) {
+    // Strict check for directory traversal
+    const hasDangerousPath = () => {
+      const normalized = path.normalize(filename);
+      const resolved = path.resolve(path.join(cdnDirectory, normalized));
+      const relative = path.relative(cdnDirectory, resolved);
+      
+      return (
+        normalized !== filename || 
+        filename.includes('../') || 
+        filename.startsWith('/') || 
+        relative.startsWith('..') || 
+        relative.includes('../')
+      );
+    };
+
+    if (hasDangerousPath()) {
       return res.status(403).json({ 
         error: 'Access denied', 
         message: 'Invalid file path' 
       });
     }
 
-    // Sanitize filename and create full path
+    // Sanitize filename 
     const sanitizedFilename = path.basename(filename);
     const fullPath = path.join(cdnDirectory, sanitizedFilename);
 
-    // Ensure file is within CDN directory
-    const resolvedPath = path.resolve(fullPath);
-    const basePath = path.resolve(cdnDirectory);
-
-    if (!resolvedPath.startsWith(basePath)) {
-      return res.status(403).json({ 
-        error: 'Access denied', 
-        message: 'Invalid file path' 
-      });
-    }
-
-    req.filePath = resolvedPath;
+    req.filePath = fullPath;
     next();
   };
 
