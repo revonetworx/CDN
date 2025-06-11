@@ -15,13 +15,24 @@ export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
   // Strict validation for filename
-  if (!filename || filename === '' || filename === '/' || /[/\\]/.test(filename)) {
+  if (!filename) {
     return res.status(400).json({ error: 'Filename is required' });
   }
 
-  // Prevent directory traversal attacks
+  // Prevent directory traversal and injection attacks
   const sanitizedFilename = path.basename(filename);
   const filePath = path.join(CDN_DIR, sanitizedFilename);
+
+  // Additional checks for potential malicious input
+  if (
+    !sanitizedFilename || 
+    sanitizedFilename.includes('/') || 
+    sanitizedFilename.includes('\\') || 
+    sanitizedFilename === '..' || 
+    sanitizedFilename === '.'
+  ) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   // Ensure file is within CDN directory
   const normalizedCdnDir = path.normalize(CDN_DIR);
@@ -44,7 +55,8 @@ export function retrieveFile(req: express.Request, res: express.Response) {
   fs.createReadStream(filePath).pipe(res);
 }
 
-// Specific CDN file retrieval route
+// Configure routes
 app.get('/cdn/:filename([^/]+)', retrieveFile);
+app.get('/cdn/', (req, res) => res.status(400).json({ error: 'Filename is required' }));
 
 export default app;
