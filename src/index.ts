@@ -14,8 +14,8 @@ const CDN_DIR = path.resolve(__dirname, 'cdn');
 export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
-  // Validate filename
-  if (!filename || filename === '/') {
+  // Check for missing or invalid filename
+  if (!filename || filename === '' || filename === '/') {
     return res.status(400).json({ error: 'Filename is required' });
   }
 
@@ -24,7 +24,10 @@ export function retrieveFile(req: express.Request, res: express.Response) {
   const filePath = path.join(CDN_DIR, sanitizedFilename);
 
   // Ensure file is within CDN directory
-  if (!filePath.startsWith(CDN_DIR)) {
+  const normalizedCdnDir = path.normalize(CDN_DIR);
+  const normalizedFilePath = path.normalize(filePath);
+
+  if (!normalizedFilePath.startsWith(normalizedCdnDir)) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
