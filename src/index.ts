@@ -15,7 +15,7 @@ export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
   // Validate filename
-  if (!filename) {
+  if (!filename || filename === '/') {
     return res.status(400).json({ error: 'Filename is required' });
   }
 
