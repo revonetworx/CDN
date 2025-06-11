@@ -38,11 +38,29 @@ describe('CDN File Retrieval', () => {
     expect(response.body).toEqual({ error: 'Access denied' });
   });
 
-  it('should require a filename', async () => {
+  it('should prevent empty filename', async () => {
     const response = await request(app).get('/cdn/');
     
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ error: 'Filename is required' });
+  });
+
+  it('should prevent malicious filenames', async () => {
+    const maliciousFilenames = [
+      '/etc/passwd', 
+      '..', 
+      '.', 
+      '../sensitive', 
+      '../../sensitive',
+      '\\sensitive',
+      '\\\\sensitive'
+    ];
+
+    for (const filename of maliciousFilenames) {
+      const response = await request(app).get(`/cdn/${filename}`);
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({ error: 'Access denied' });
+    }
   });
 
   // Cleanup
