@@ -14,8 +14,8 @@ function createFileRouter(cdnDirectory) {
   const sanitizeFilePath = (req, res, next) => {
     const { filename } = req.params;
 
-    // Explicitly check for directory traversal attempts
-    if (filename.includes('../') || filename.startsWith('/')) {
+    // Detect directory traversal attempts
+    if (filename.includes('../') || filename.startsWith('/') || filename.includes('..\\')) {
       return res.status(403).json({ 
         error: 'Access denied', 
         message: 'Invalid file path' 
@@ -44,14 +44,6 @@ function createFileRouter(cdnDirectory) {
   // File retrieval route
   router.get('/:filename', sanitizeFilePath, (req, res) => {
     const { filePath } = req;
-
-    // Perform additional traversal check
-    if (path.dirname(filePath) !== path.resolve(cdnDirectory)) {
-      return res.status(403).json({ 
-        error: 'Access denied', 
-        message: 'Invalid file path' 
-      });
-    }
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
