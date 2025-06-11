@@ -38,7 +38,7 @@ describe('File Routes', () => {
       .expect(403);
 
     expect(response.body).toEqual({
-      error: 'Access denied',
+      error: 'Access denied', 
       message: 'Invalid file path'
     });
   });
