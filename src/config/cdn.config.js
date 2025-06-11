@@ -1,4 +1,4 @@
-const path = require('path');
+import path from 'path';
 
 /**
  * Configuration for CDN file serving
@@ -10,7 +10,7 @@ const path = require('path');
 /** @type {CdnConfig} */
 const cdnConfig = {
   // Use an absolute path to the CDN directory
-  rootDirectory: path.resolve(__dirname, '../../cdn'),
+  rootDirectory: path.resolve(process.cwd(), 'cdn'),
   
   // Allowed file extensions for security
   allowedFileExtensions: [
@@ -21,4 +21,4 @@ const cdnConfig = {
   ]
 };
 
-module.exports = cdnConfig;
+export default cdnConfig;
