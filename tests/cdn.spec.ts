@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterAll } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
@@ -46,7 +46,7 @@ describe('CDN File Retrieval', () => {
   });
 
   // Cleanup
-  after(() => {
+  afterAll(() => {
     fs.unlinkSync(testFilePath);
   });
 });
