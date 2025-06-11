@@ -7,24 +7,6 @@ const app = express();
 const CDN_DIR = path.resolve(__dirname, 'cdn');
 
 /**
- * Checks if a filename is safe for retrieval
- * @param filename Filename to validate
- * @returns boolean indicating if filename is safe
- */
-function isValidFilename(filename: string): boolean {
-  const unsafePatterns = [
-    /\.\./,      // Prevents directory traversal
-    /^[/\\]/,    // Prevents absolute paths
-    /[/\\]/,     // Prevents path separators
-    /^\.$/,      // Prevents current directory
-    /^\.{1,2}$/, // Prevents current/parent directory
-    /^\\+/       // Prevents Windows path manipulation
-  ];
-
-  return !unsafePatterns.some(pattern => pattern.test(filename || ''));
-}
-
-/**
  * Retrieves a file from the CDN directory
  * @param req Express request object
  * @param res Express response object
@@ -32,8 +14,14 @@ function isValidFilename(filename: string): boolean {
 export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
-  // Validate parameters
-  if (!isValidFilename(filename)) {
+  // Strict early validation
+  if (!filename || 
+      filename.includes('/') || 
+      filename.includes('\\') || 
+      filename.includes('..') || 
+      filename.startsWith('.') || 
+      filename === ''
+  ) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
