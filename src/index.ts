@@ -45,7 +45,7 @@ export function retrieveFile(req: express.Request, res: express.Response) {
 }
 
 // Configure routes
-app.get('/cdn/:filename([^/\\]+)', retrieveFile);
+app.get('/cdn/:filename', retrieveFile);
 app.get('/cdn/', (req, res) => res.status(400).json({ error: 'Filename is required' }));
 
 export default app;
