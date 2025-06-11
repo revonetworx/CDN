@@ -7,6 +7,22 @@ const app = express();
 const CDN_DIR = path.resolve(__dirname, 'cdn');
 
 /**
+ * Checks if a filename is safe for retrieval
+ * @param filename Filename to validate
+ * @returns boolean indicating if filename is safe
+ */
+function isValidFilename(filename: string): boolean {
+  const unsafePatterns = [
+    /\.\./,  // Prevents directory traversal
+    /^\.$/,  // Prevent current directory
+    /^[/\\]/, // Prevent absolute paths
+    /[/\\]/,  // Prevent path separators
+  ];
+
+  return !unsafePatterns.some(pattern => pattern.test(filename));
+}
+
+/**
  * Retrieves a file from the CDN directory
  * @param req Express request object
  * @param res Express response object
@@ -19,20 +35,14 @@ export function retrieveFile(req: express.Request, res: express.Response) {
     return res.status(400).json({ error: 'Filename is required' });
   }
 
+  // Validate filename against unsafe patterns
+  if (!isValidFilename(filename)) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
   // Prevent directory traversal and injection attacks
   const sanitizedFilename = path.basename(filename);
   const filePath = path.join(CDN_DIR, sanitizedFilename);
-
-  // Additional checks for potential malicious input
-  if (
-    !sanitizedFilename || 
-    sanitizedFilename.includes('/') || 
-    sanitizedFilename.includes('\\') || 
-    sanitizedFilename === '..' || 
-    sanitizedFilename === '.'
-  ) {
-    return res.status(403).json({ error: 'Access denied' });
-  }
 
   // Ensure file is within CDN directory
   const normalizedCdnDir = path.normalize(CDN_DIR);
