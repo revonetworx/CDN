@@ -21,10 +21,13 @@ describe('Rate Limiter Middleware', () => {
     expect(typeof rateLimiter).toBe('function');
   });
 
-  it('should have correct default settings', () => {
-    const rateLimiter = createRateLimiter();
+  it('should create rate limiter with default window and max values', () => {
+    const DEFAULT_WINDOW_MS = 15 * 60 * 1000;
+    const DEFAULT_MAX_REQUESTS = 100;
     
-    expect(rateLimiter.windowMs).toBe(15 * 60 * 1000);
-    expect(rateLimiter.max).toBe(100);
+    const createOptions = createRateLimiter()._createOptions;
+    
+    expect(createOptions.windowMs).toBe(DEFAULT_WINDOW_MS);
+    expect(createOptions.max).toBe(DEFAULT_MAX_REQUESTS);
   });
 });
