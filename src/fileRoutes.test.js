@@ -32,7 +32,7 @@ describe('File Routes', () => {
     expect(response.text).toBe('Test content');
   });
 
-  it('should prevent directory traversal', async () => {
+  it('should prevent directory traversal with ../', async () => {
     const response = await request(app)
       .get('/files/../etc/passwd')
       .expect(403);
