@@ -14,8 +14,16 @@ const CDN_DIR = path.resolve(__dirname, 'cdn');
 export function retrieveFile(req: express.Request, res: express.Response) {
   const { filename } = req.params;
 
-  // Early and strict validation 
-  if (!filename || filename.includes('/') || filename.includes('\\')) {
+  // Prevent specific unsafe patterns first
+  if (
+    !filename || 
+    filename.includes('../') || 
+    filename.includes('..\\') || 
+    filename.includes('/') || 
+    filename.includes('\\') || 
+    filename.startsWith('.') ||
+    filename === ''
+  ) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
@@ -28,20 +36,6 @@ export function retrieveFile(req: express.Request, res: express.Response) {
   const normalizedFilePath = path.normalize(filePath);
 
   if (!normalizedFilePath.startsWith(normalizedCdnDir)) {
-    return res.status(403).json({ error: 'Access denied' });
-  }
-
-  // Check for potentially malicious filename patterns
-  const maliciousPatterns = [
-    /\.\./,      // Prevents directory traversal
-    /^[/\\]/,    // Prevents absolute paths
-    /[/\\]/,     // Prevents path separators
-    /^\.$/,      // Prevents current directory
-    /^\.{1,2}$/, // Prevents current/parent directory
-    /^\\+/       // Prevents Windows path manipulation
-  ];
-
-  if (maliciousPatterns.some(pattern => pattern.test(filename))) {
     return res.status(403).json({ error: 'Access denied' });
   }
 
