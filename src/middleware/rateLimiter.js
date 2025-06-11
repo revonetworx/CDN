@@ -13,7 +13,7 @@ const createRateLimiter = (options = {}) => {
     max = 100  // 100 requests per windowMs
   } = options;
 
-  return rateLimit({
+  const createOptions = {
     windowMs,
     max,
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
@@ -27,7 +27,14 @@ const createRateLimiter = (options = {}) => {
       console.warn(`Rate limit exceeded for IP: ${req.ip}`);
       res.status(options.statusCode).json(options.message);
     }
-  });
+  };
+
+  const rateLimiter = rateLimit(createOptions);
+  
+  // Expose createOptions for testing
+  rateLimiter._createOptions = createOptions;
+  
+  return rateLimiter;
 };
 
 module.exports = createRateLimiter;
