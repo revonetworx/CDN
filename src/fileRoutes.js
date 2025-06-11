@@ -14,33 +14,38 @@ function createFileRouter(cdnDirectory) {
   const sanitizeFilePath = (req, res, next) => {
     const { filename } = req.params;
 
-    // Strict check for directory traversal
-    const hasDangerousPath = () => {
-      const normalized = path.normalize(filename);
-      const resolved = path.resolve(path.join(cdnDirectory, normalized));
-      const relative = path.relative(cdnDirectory, resolved);
-      
-      return (
-        normalized !== filename || 
-        filename.includes('../') || 
-        filename.startsWith('/') || 
-        relative.startsWith('..') || 
-        relative.includes('../')
-      );
-    };
+    // Strict validation to prevent any directory traversal
+    const unsafePathPatterns = [
+      /\.\./,  // Contains parent directory reference
+      /^\/+/,  // Starts with forward slash
+      /\\+/,   // Contains backslash
+    ];
 
-    if (hasDangerousPath()) {
+    const hasUnsafePath = unsafePathPatterns.some(pattern => pattern.test(filename));
+
+    if (hasUnsafePath) {
       return res.status(403).json({ 
         error: 'Access denied', 
         message: 'Invalid file path' 
       });
     }
 
-    // Sanitize filename 
+    // Sanitize filename by extracting base name
     const sanitizedFilename = path.basename(filename);
     const fullPath = path.join(cdnDirectory, sanitizedFilename);
 
-    req.filePath = fullPath;
+    // Double-check path resolution
+    const resolvedPath = path.resolve(fullPath);
+    const basePath = path.resolve(cdnDirectory);
+
+    if (!resolvedPath.startsWith(basePath)) {
+      return res.status(403).json({ 
+        error: 'Access denied', 
+        message: 'Invalid file path' 
+      });
+    }
+
+    req.filePath = resolvedPath;
     next();
   };
 
